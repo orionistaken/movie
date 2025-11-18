@@ -333,7 +333,7 @@ def save_rating(entry):
 
 # --- HEADER & METRİKLER ---
 st.title("🎬")
-st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem; margin-top: -10px;'>Arkadaşlarınla izlediklerini puanla, yorumla ve keşfet!</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem; margin-top: -10px;'></p>", unsafe_allow_html=True)
 
 # Verileri çekelim
 movies_df = load_movies()
