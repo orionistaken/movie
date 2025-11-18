@@ -131,7 +131,17 @@ st.markdown("""
     /* Form stilleri */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
-    .stSelectbox > div > div > div,
+    .stSelectbox > div > div > div {
+    border-radius: 10px !important;
+    border: 2px solid #334155 !important;
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    padding: 12px !important; /* Bu dolgu (padding), metnin kesilmesine neden olabilir. */
+    transition: all 0.3s ease !important;
+    
+    /* Deneme amaçlı olarak bu padding değerini küçültmeyi deneyin: */
+    /* padding: 8px 12px !important; */ 
+    },
     .stNumberInput > div > div > input {
         border-radius: 10px !important;
         border: 2px solid #334155 !important;
@@ -139,6 +149,14 @@ st.markdown("""
         color: #e2e8f0 !important;
         padding: 12px !important;
         transition: all 0.3s ease !important;
+    }
+    .stSelectbox input[type="text"] {
+    color: #e2e8f0 !important;
+    height: auto !important; /* Yüksekliğin içeriğe göre otomatik ayarlanmasına izin ver */
+    min-height: 44px !important; /* Gerekirse minimum yükseklik belirle */
+    padding-top: 5px !important;    /* Üst dolguyu azalt/ayarla */
+    padding-bottom: 5px !important; /* Alt dolguyu azalt/ayarla */
+    line-height: 1.5 !important; /* Metin satır yüksekliğini ayarla */
     }
     .stSelectbox input[type="text"]:-webkit-autofill,
     .stSelectbox input[type="text"]:-webkit-autofill:hover, 
