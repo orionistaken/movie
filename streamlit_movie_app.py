@@ -44,8 +44,24 @@ def connect_google_sheets():
 # READ
 def load_sheet(sheet_name):
     sheet = connect_google_sheets()
-    data = sheet.worksheet(sheet_name).get_all_records()
-    return pd.DataFrame(data)
+    ws = sheet.worksheet(sheet_name)
+    
+    # Tüm veriyi A1'den itibaren liste formatında çek (başlık dahil)
+    data = ws.get_all_values()
+    
+    if not data:
+        # Sheet tamamen boşsa (başlık bile yoksa) boş DataFrame döndür
+        return pd.DataFrame()
+        
+    # İlk satırı başlık olarak al
+    headers = data[0]
+    # Geri kalan satırları veri olarak al
+    records = data[1:]
+    
+    # DataFrame'i başlıklar ve verilerle oluştur
+    df = pd.DataFrame(records, columns=headers)
+    
+    return df
 
 # WRITE (append row)
 def append_row(sheet_name, row_list):
@@ -57,15 +73,20 @@ def append_row(sheet_name, row_list):
 #   YARDIMCI FONKSİYONLAR
 # -------------------------------------------------------------------
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60) 
 def load_movies():
-    # gspread fonksiyonunu çağırır
-    return load_sheet("movies")
+    df = load_sheet("movies")
+    # DataFrame boşsa veya sütun yoksa, beklenen sütunlarla boş DataFrame döndür
+    if df.empty or 'title' not in df.columns:
+        return pd.DataFrame(columns=["type", "title"])
+    return df
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def load_ratings():
-    # gspread fonksiyonunu çağırır
-    return load_sheet("ratings")
+    df = load_sheet("ratings")
+    if df.empty or 'title' not in df.columns:
+        return pd.DataFrame(columns=["type", "title", "rating", "comment", "user", "created_at"])
+    return df
 
 def save_movie(entry):
     # Sözlük (dict) olarak gelen veriyi, gspread'in istediği liste (list) formatına dönüştürür.
