@@ -140,6 +140,11 @@ st.markdown("""
         padding: 12px !important;
         transition: all 0.3s ease !important;
     }
+    .stSelectbox input[type="text"] {
+    color: #e2e8f0 !important; /* Seçili metni açık renk yap */
+    -webkit-text-fill-color: #e2e8f0 !important; /* Webkit tarayıcılar için (Chrome, Edge) */
+    opacity: 1 !important; /* Görünmezlik olmadığından emin ol */
+    }
     
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
