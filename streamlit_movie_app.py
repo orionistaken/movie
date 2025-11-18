@@ -151,20 +151,8 @@ st.markdown("""
         transition: all 0.3s ease !important;
     }
     .stSelectbox input[type="text"] {
-    color: #e2e8f0 !important;
-    height: auto !important; /* Yüksekliğin içeriğe göre otomatik ayarlanmasına izin ver */
-    min-height: 44px !important; /* Gerekirse minimum yükseklik belirle */
-    padding-top: 5px !important;    /* Üst dolguyu azalt/ayarla */
-    padding-bottom: 5px !important; /* Alt dolguyu azalt/ayarla */
-    line-height: 1.5 !important; /* Metin satır yüksekliğini ayarla */
-    }
-    .stSelectbox input[type="text"]:-webkit-autofill,
-    .stSelectbox input[type="text"]:-webkit-autofill:hover, 
-    .stSelectbox input[type="text"]:-webkit-autofill:focus, 
-    .stSelectbox input[type="text"]:-webkit-autofill:active {
-    -webkit-text-fill-color: #e2e8f0 !important; /* Metin dolgu rengini açık renk yap */
-    background: transparent !important; /* Arka planı transparent yap */
-    transition: background-color 5000s ease-in-out 0s; /* Arka plan rengini değiştiren otomatik dolguyu engelle */
+    line-height: 1.4 !important; /* Satır yüksekliğini garanti et */
+    height: auto !important;     /* Yüksekliğin içeriğe göre otomatik ayarlanmasını sağla */
     }
     
     .stTextInput > div > div > input:focus,
