@@ -151,7 +151,7 @@ st.markdown("""
     
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus,
-    .stSelectbox > div > div > div:focus,
+    .stSelectbox > div > div > div,
     .stNumberInput > div > div > input:focus {
         border-color: #667eea !important;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
