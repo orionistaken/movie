@@ -140,10 +140,13 @@ st.markdown("""
         padding: 12px !important;
         transition: all 0.3s ease !important;
     }
-    .stSelectbox input[type="text"] {
-    color: #e2e8f0 !important; /* Seçili metni açık renk yap */
-    -webkit-text-fill-color: #e2e8f0 !important; /* Webkit tarayıcılar için (Chrome, Edge) */
-    opacity: 1 !important; /* Görünmezlik olmadığından emin ol */
+    .stSelectbox input[type="text"]:-webkit-autofill,
+    .stSelectbox input[type="text"]:-webkit-autofill:hover, 
+    .stSelectbox input[type="text"]:-webkit-autofill:focus, 
+    .stSelectbox input[type="text"]:-webkit-autofill:active {
+    -webkit-text-fill-color: #e2e8f0 !important; /* Metin dolgu rengini açık renk yap */
+    background: transparent !important; /* Arka planı transparent yap */
+    transition: background-color 5000s ease-in-out 0s; /* Arka plan rengini değiştiren otomatik dolguyu engelle */
     }
     
     .stTextInput > div > div > input:focus,
