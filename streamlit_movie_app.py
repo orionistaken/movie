@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Modern ve şık CSS tasarımı
+# Modern karanlık tema CSS tasarımı
 st.markdown("""
 <style>
     /* Ana tema renkleri */
@@ -22,26 +22,33 @@ st.markdown("""
         --success-color: #10b981;
         --warning-color: #f59e0b;
         --danger-color: #ef4444;
+        --dark-bg: #0f172a;
+        --card-bg: #1e293b;
     }
     
     /* Genel arka plan ve yazı tipi */
-    .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .stApp {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
         background-attachment: fixed;
+    }
+    
+    .main {
+        background: transparent;
     }
     
     .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(15, 23, 42, 0.95);
         border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(10px);
+        border: 1px solid rgba(99, 102, 241, 0.2);
     }
     
     /* Başlık stilleri */
     h1 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -49,6 +56,11 @@ st.markdown("""
         font-size: 3rem !important;
         margin-bottom: 0.5rem !important;
         text-align: center;
+    }
+    
+    /* Tüm yazılar için varsayılan renk */
+    p, span, label, div {
+        color: #e2e8f0 !important;
     }
     
     /* Metrik kutucukları */
@@ -80,15 +92,16 @@ st.markdown("""
     
     /* Tab stilleri */
     .stTabs {
-        background: white;
+        background: #1e293b;
         border-radius: 15px;
         padding: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(99, 102, 241, 0.2);
     }
     
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        background: #f8fafc;
+        background: #0f172a;
         border-radius: 12px;
         padding: 8px;
     }
@@ -97,14 +110,16 @@ st.markdown("""
         border-radius: 10px;
         padding: 12px 24px;
         font-weight: 600;
-        background: white;
+        background: #1e293b;
+        color: #94a3b8 !important;
         border: 2px solid transparent;
         transition: all 0.3s ease;
     }
     
     .stTabs [data-baseweb="tab"]:hover {
-        background: #f1f5f9;
+        background: #334155;
         border-color: #667eea;
+        color: #e2e8f0 !important;
     }
     
     .stTabs [aria-selected="true"] {
@@ -119,7 +134,9 @@ st.markdown("""
     .stSelectbox > div > div > div,
     .stNumberInput > div > div > input {
         border-radius: 10px !important;
-        border: 2px solid #e5e7eb !important;
+        border: 2px solid #334155 !important;
+        background: #1e293b !important;
+        color: #e2e8f0 !important;
         padding: 12px !important;
         transition: all 0.3s ease !important;
     }
@@ -129,7 +146,23 @@ st.markdown("""
     .stSelectbox > div > div > div:focus-within,
     .stNumberInput > div > div > input:focus {
         border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+        background: #0f172a !important;
+    }
+    
+    /* Selectbox dropdown */
+    [data-baseweb="popover"] {
+        background: #1e293b !important;
+    }
+    
+    [data-baseweb="select"] > div {
+        background: #1e293b !important;
+        color: #e2e8f0 !important;
+    }
+    
+    /* Placeholder renkleri */
+    input::placeholder, textarea::placeholder {
+        color: #64748b !important;
     }
     
     /* Buton stilleri */
@@ -154,8 +187,13 @@ st.markdown("""
     .stAlert {
         border-radius: 12px;
         border-left: 4px solid #667eea;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
         padding: 16px;
+        color: #e2e8f0 !important;
+    }
+    
+    .stAlert > div {
+        color: #e2e8f0 !important;
     }
     
     /* Expander stilleri */
@@ -180,9 +218,14 @@ st.markdown("""
     
     /* Radio button stilleri */
     .stRadio > div {
-        background: #f8fafc;
+        background: #1e293b;
         padding: 12px;
         border-radius: 10px;
+        border: 1px solid #334155;
+    }
+    
+    .stRadio label {
+        color: #e2e8f0 !important;
     }
     
     /* Divider */
@@ -195,24 +238,25 @@ st.markdown("""
     
     /* Alt başlıklar */
     h2, h3 {
-        color: #1e293b;
+        color: #f1f5f9 !important;
         font-weight: 700;
     }
     
     /* Özel kart tasarımı */
     .custom-card {
-        background: white;
+        background: #1e293b;
         border-radius: 15px;
         padding: 24px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         margin-bottom: 20px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid rgba(99, 102, 241, 0.2);
         transition: all 0.3s ease;
     }
     
     .custom-card:hover {
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
         transform: translateY(-2px);
+        border-color: rgba(99, 102, 241, 0.4);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -234,22 +278,14 @@ def connect_google_sheets():
 def load_sheet(sheet_name):
     sheet = connect_google_sheets()
     ws = sheet.worksheet(sheet_name)
-    
-    # Tüm veriyi A1'den itibaren liste formatında çek (başlık dahil)
     data = ws.get_all_values()
     
     if not data:
-        # Sheet tamamen boşsa (başlık bile yoksa) boş DataFrame döndür
         return pd.DataFrame()
         
-    # İlk satırı başlık olarak al
     headers = data[0]
-    # Geri kalan satırları veri olarak al
     records = data[1:]
-    
-    # DataFrame'i başlıklar ve verilerle oluştur
     df = pd.DataFrame(records, columns=headers)
-    
     return df
 
 # WRITE (append row)
@@ -258,14 +294,9 @@ def append_row(sheet_name, row_list):
     ws = sheet.worksheet(sheet_name)
     ws.append_row(row_list)
 
-# -------------------------------------------------------------------
-#   YARDIMCI FONKSİYONLAR
-# -------------------------------------------------------------------
-
 @st.cache_data(ttl=60) 
 def load_movies():
     df = load_sheet("movies")
-    # DataFrame boşsa veya sütun yoksa, beklenen sütunlarla boş DataFrame döndür
     if df.empty or 'title' not in df.columns:
         return pd.DataFrame(columns=["type", "title"])
     return df
@@ -278,25 +309,20 @@ def load_ratings():
     return df
 
 def save_movie(entry):
-    # Sözlük (dict) olarak gelen veriyi, gspread'in istediği liste (list) formatına dönüştürür.
     row_list = [entry["type"], entry["title"]]
     append_row("movies", row_list)
-    # Veriyi yazdıktan sonra önbelleği temizleyin
     load_movies.clear()
 
 def save_rating(entry):
-    # Sözlük (dict) olarak gelen veriyi, gspread'in istediği liste (list) formatına dönüştürür.
     row_list = [
         entry["type"], entry["title"], entry["rating"],
         entry["comment"], entry["user"], entry["created_at"]
     ]
     append_row("ratings", row_list)
-    # Veriyi yazdıktan sonra önbelleği temizleyin
     load_ratings.clear()
 
-
 # --- HEADER & METRİKLER ---
-st.title("🎬 Filmler")
+st.title("🎬")
 st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem; margin-top: -10px;'>Arkadaşlarınla izlediklerini puanla, yorumla ve keşfet!</p>", unsafe_allow_html=True)
 
 # Verileri çekelim
