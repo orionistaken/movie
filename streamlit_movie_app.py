@@ -132,15 +132,8 @@ st.markdown("""
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stSelectbox > div > div > div {
-    border-radius: 10px !important;
-    border: 2px solid #334155 !important;
-    background: #1e293b !important;
-    color: #e2e8f0 !important;
-    padding: 12px !important; /* Bu dolgu (padding), metnin kesilmesine neden olabilir. */
-    transition: all 0.3s ease !important;
-    
-    /* Deneme amaçlı olarak bu padding değerini küçültmeyi deneyin: */
-    /* padding: 8px 12px !important; */ 
+    min-height: 48px !important;    
+    line-height: 1.4 !important; 
     },
     .stNumberInput > div > div > input {
         border-radius: 10px !important;
