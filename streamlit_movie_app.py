@@ -165,6 +165,9 @@ st.markdown("""
     [data-baseweb="select"] > div {
         background: #1e293b !important;
         color: #e2e8f0 !important;
+        display: flex !important;
+        align-items: center !important; 
+        height: 100% !important;
     }
     
     /* Placeholder renkleri */
