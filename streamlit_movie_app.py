@@ -602,6 +602,11 @@ with st.form("add_watchlist"):
     if watchlist_df.empty:
         st.info("📭 Watchlist boş.")
     else:
+        st.dataframe(
+            user_wl[["type", "title", "created_at"]],
+            hide_index=True,
+            use_container_width=True
+        )
         user_list = watchlist_df["user"].unique()
         selected_wl_user = st.selectbox("👤 Kullanıcı seç", user_list)
 
