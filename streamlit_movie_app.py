@@ -570,46 +570,106 @@ with tab_profile:
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-#   TAB 4: WATCHLIST
+#   TAB 4: WATCHLIST (GÜNCELLENMİŞ & EKLEME ÖZELLİKLİ)
 # ==============================================================================
 with tab_watchlist:
-    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-    st.subheader("📌 Watchlist")
+    # Sayfayı iki sütuna bölelim: Sol taraf liste, Sağ taraf ekleme formu
+    col_list, col_add = st.columns([2, 1], gap="large")
 
-    watchlist_df = load_watchlist()
+    # --- SOL SÜTUN: LİSTE GÖRÜNTÜLEME ---
+    with col_list:
+        st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+        st.subheader("📌 İzleme Listem")
 
-    # Veri kontrolü: Boş mu veya gerekli sütunlar eksik mi?
-    if watchlist_df.empty:
-        st.info("📭 Watchlist şu an boş.")
-    elif "user" not in watchlist_df.columns:
-        st.error("⚠️ Watchlist verisi okunurken bir hata oluştu (Sütun başlıkları eksik). Lütfen Google Sheet'i kontrol edin.")
-    else:
-        users = watchlist_df["user"].unique()
-        selected_user = st.selectbox("👤 Kullanıcı", users, key="wl_user_select")
+        watchlist_df = load_watchlist()
 
-        user_wl = watchlist_df[watchlist_df["user"] == selected_user]
-
-        if user_wl.empty:
-            st.info("📭 Bu kullanıcının watchlist’i boş.")
+        # Hata önleyici kontroller
+        if watchlist_df.empty:
+            st.info("📭 Watchlist şu an boş.")
+        elif "user" not in watchlist_df.columns:
+            st.error("⚠️ Veri hatası: Sütunlar eksik.")
         else:
-            # Güvenli sütun seçimi
-            cols_to_show = [col for col in ["type", "title", "created_at"] if col in user_wl.columns]
-            
-            st.dataframe(
-                user_wl[cols_to_show],
-                use_container_width=True,
-                hide_index=True
-            )
-            
-            # Silme opsiyonu ekleyelim (Opsiyonel Geliştirme)
-            to_delete = st.selectbox("Listeden silmek istediğin var mı?", ["Seçiniz..."] + user_wl["title"].tolist())
-            if to_delete != "Seçiniz...":
-                if st.button(f"🗑️ {to_delete} sil"):
-                    delete_from_watchlist(to_delete, selected_user)
-                    st.success("Silindi!")
-                    st.rerun()
+            users = watchlist_df["user"].unique()
+            # Key ekledik ki diğer tablardaki selectboxlarla çakışmasın
+            selected_user = st.selectbox("👤 Kimin Listesi?", users, key="wl_view_user")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+            user_wl = watchlist_df[watchlist_df["user"] == selected_user]
+
+            if user_wl.empty:
+                st.info("📭 Bu kullanıcının listesi boş.")
+            else:
+                # Sadece var olan sütunları göster
+                cols_to_show = [c for c in ["type", "title", "created_at"] if c in user_wl.columns]
+                
+                st.dataframe(
+                    user_wl[cols_to_show],
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                st.markdown("---")
+                # Silme İşlemi
+                to_delete = st.selectbox("Listeden kaldır:", ["Seçiniz..."] + user_wl["title"].tolist(), key="wl_delete_select")
+                if to_delete != "Seçiniz...":
+                    if st.button(f"🗑️ {to_delete} Sil", key="wl_delete_btn"):
+                        delete_from_watchlist(to_delete, selected_user)
+                        st.success(f"{to_delete} listeden silindi!")
+                        st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # --- SAĞ SÜTUN: YENİ EKLEME ---
+    with col_add:
+        st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+        st.subheader("➕ Listeye Ekle")
+        st.info("Veritabanında olmasa bile buradan ekleyebilirsin.")
+
+        with st.form("watchlist_add_form"):
+            # Form Elemanları
+            wl_type = st.radio("Tür", ["Film", "Dizi"], horizontal=True, key="wl_type_radio")
+            wl_title = st.text_input("Adı Nedir?", placeholder="Örn: Breaking Bad", key="wl_title_input")
+            wl_user = st.text_input("Sen Kimsin?", placeholder="Kullanıcı Adın", key="wl_user_input")
+            
+            submitted = st.form_submit_button("📌 Watchlist'e Kaydet", use_container_width=True)
+
+            if submitted:
+                if not wl_title.strip() or not wl_user.strip():
+                    st.error("⚠️ Lütfen film adı ve kullanıcı adını girin.")
+                else:
+                    # 1. Önce bu film/dizi ANA VERİTABANINDA var mı bakalım?
+                    # Eğer yoksa, oraya da ekleyelim ki ileride oy verebilesin.
+                    existing_titles = movies_df["title"].values if not movies_df.empty else []
+                    
+                    if wl_title not in existing_titles:
+                        save_movie({"type": wl_type, "title": wl_title})
+                        st.toast(f"🆕 '{wl_title}' ana veritabanına da eklendi!", icon="💾")
+
+                    # 2. Kullanıcının Watchlist'inde zaten var mı?
+                    # (Basit kontrol: şu anki yüklenen dataframe'e bakıyoruz)
+                    already_in_wl = False
+                    if not watchlist_df.empty and "title" in watchlist_df.columns and "user" in watchlist_df.columns:
+                        check = watchlist_df[
+                            (watchlist_df["title"] == wl_title) & 
+                            (watchlist_df["user"] == wl_user)
+                        ]
+                        if not check.empty:
+                            already_in_wl = True
+
+                    if already_in_wl:
+                        st.warning(f"⚠️ '{wl_title}' zaten senin listende var!")
+                    else:
+                        # 3. Watchlist'e Kaydet
+                        entry = {
+                            "type": wl_type,
+                            "title": wl_title,
+                            "user": wl_user,
+                            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+                        }
+                        save_watchlist(entry)
+                        st.success(f"✅ '{wl_title}' izleme listene eklendi!")
+                        st.balloons()
+                        
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
 #   TAB: RASTGELE ÖNERİ MAKİNESİ (SADECE WATCHLIST'TEN SEÇER)
