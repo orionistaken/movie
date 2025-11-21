@@ -647,7 +647,7 @@ with st.form("add_watchlist"):
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-#   TAB: RASTGELE ÖNERİ MAKİNESİ
+#   TAB: RASTGELE ÖNERİ MAKİNESİ (SADECE WATCHLIST'TEN SEÇER)
 # ==============================================================================
 with tab_recommend:
     st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
@@ -664,31 +664,35 @@ with tab_recommend:
 
         user_wl = watchlist_df[watchlist_df["user"] == selected_user]
 
+        # Watchlist'teki filmler ve diziler
         movies_only = user_wl[user_wl["type"] == "Film"]["title"].tolist()
         shows_only = user_wl[user_wl["type"] == "Dizi"]["title"].tolist()
 
         colA, colB = st.columns(2)
 
+        # Filmler
         with colA:
             st.markdown("### 🎬 Filmler")
             selected_movies = st.multiselect(
-                "Rastgele seçim hangi filmler arasından yapılsın?",
+                "Hangi filmler arasından seçim yapılsın?",
                 movies_only,
-                default=movies_only  # Hepsi seçili başlar
+                default=movies_only
             )
 
+        # Diziler
         with colB:
             st.markdown("### 📺 Diziler")
             selected_shows = st.multiselect(
-                "Rastgele seçim hangi diziler arasından yapılsın?",
+                "Hangi diziler arasından seçim yapılsın?",
                 shows_only,
-                default=shows_only  # Hepsi seçili başlar
+                default=shows_only
             )
 
         st.divider()
 
         col1, col2 = st.columns(2)
 
+        # Rastgele film seç
         with col1:
             st.markdown("## 🎯 Rastgele Film")
             if st.button("🎬 Film Seç", use_container_width=True):
@@ -698,6 +702,7 @@ with tab_recommend:
                     rnd_movie = pd.Series(selected_movies).sample(1).iloc[0]
                     st.success(f"🎬 İzleyebilirsin: **{rnd_movie}**")
 
+        # Rastgele dizi seç
         with col2:
             st.markdown("## 🎯 Rastgele Dizi")
             if st.button("📺 Dizi Seç", use_container_width=True):
@@ -708,6 +713,7 @@ with tab_recommend:
                     st.success(f"📺 Başlayabilirsin: **{rnd_show}**")
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 # ==============================================================================
