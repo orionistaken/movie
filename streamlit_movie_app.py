@@ -325,6 +325,13 @@ def load_watchlist():
         return pd.DataFrame(columns=["type", "title", "user", "created_at"])
     return df
 
+@st.cache_data(ttl=60)
+def load_watchlist():
+    df = load_sheet("watchlist")
+    if df.empty or "title" not in df.columns:
+        return pd.DataFrame(columns=["type", "title", "user", "created_at"])
+    return df
+
 def save_movie(entry):
     row_list = [entry["type"], entry["title"]]
     append_row("movies", row_list)
@@ -360,6 +367,16 @@ def save_watchlist(entry):
     row = [entry["type"], entry["title"], entry["user"], entry["created_at"]]
     append_row("watchlist", row)
     load_watchlist.clear()
+
+def save_watchlist(entry):
+    append_row("watchlist", [
+        entry["type"],
+        entry["title"],
+        entry["user"],
+        entry["created_at"]
+    ])
+    load_watchlist.clear()
+
 
 
 # --- HEADER & METRİKLER ---
@@ -552,102 +569,22 @@ with tab_watchlist:
 
     watchlist_df = load_watchlist()
 
-    # Watchlist'e ekleme
-with st.form("add_watchlist"):
-    colA, colB = st.columns(2)
-
-    with colA:
-        wl_user = st.text_input("👤 Kullanıcı Adı", placeholder="Örn: Burhan")
-
-    with colB:
-        wl_type = st.radio("Tür", ["Film", "Dizi"], horizontal=True)
-
-    wl_title = st.text_input("🎬 İçerik Adı", placeholder="Örn: Breaking Bad / Inception")
-
-    submitted_wl = st.form_submit_button("📌 Watchliste Ekle")
-
-    if submitted_wl:
-        if not wl_user.strip():
-            st.error("⚠️ İsmini girmelisin!")
-        elif not wl_title.strip():
-            st.error("⚠️ İçerik adı boş bırakılamaz!")
-        else:
-            save_watchlist({
-                "type": wl_type,
-                "title": wl_title,
-                "user": wl_user,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
-            })
-            st.success("✔ Watchliste eklendi!")
-            st.rerun()
-
-        submitted_wl = st.form_submit_button("📌 Watchliste Ekle")
-        if submitted_wl:
-            if not wl_user.strip():
-                st.error("⚠️ İsmini girmelisin!")
-            else:
-                m_type = movies_df[movies_df["title"] == wl_title]["type"].iloc[0]
-                save_watchlist({
-                    "type": m_type,
-                    "title": wl_title,
-                    "user": wl_user,
-                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
-                })
-                st.success("✔ Watchliste eklendi!")
-                st.rerun()
-
-    st.divider()
-
-    # Kullanıcı bazlı gösterim
     if watchlist_df.empty:
         st.info("📭 Watchlist boş.")
     else:
-        st.dataframe(
-            user_wl[["type", "title", "created_at"]],
-            hide_index=True,
-            use_container_width=True
-        )
-        user_list = watchlist_df["user"].unique()
-        selected_wl_user = st.selectbox("👤 Kullanıcı seç", user_list)
+        users = watchlist_df["user"].unique()
+        selected_user = st.selectbox("👤 Kullanıcı", users)
 
-        user_wl = watchlist_df[watchlist_df["user"] == selected_wl_user]
+        user_wl = watchlist_df[watchlist_df["user"] == selected_user]
 
-        st.subheader(f"🎬 {selected_wl_user} Watchlist")
-
-        st.dataframe(user_wl[["type", "title", "created_at"]], hide_index=True, use_container_width=True)
-
-        # Silme
-        remove_title = st.selectbox("❌ Silmek istediğin içerik", user_wl["title"].unique())
-        if st.button("❌ Watchlistten Sil"):
-            delete_from_watchlist(remove_title, selected_wl_user)
-            st.success("Silindi ✔")
-            st.rerun()
-
-        st.divider()
-
-        # 🎯 Rastgele Seçim
-        st.subheader("🎲 Rastgele İzleme Önerisi")
-
-        movies_only = user_wl[user_wl["type"] == "Film"]
-        shows_only = user_wl[user_wl["type"] == "Dizi"]
-
-        colX, colY = st.columns(2)
-
-        with colX:
-            st.markdown("### 🎬 Rastgele Film")
-            if len(movies_only) > 0:
-                rnd_movie = movies_only.sample(1)["title"].iloc[0]
-                st.success(f"🎯 İzleyebilirsin: **{rnd_movie}**")
-            else:
-                st.info("Film yok.")
-
-        with colY:
-            st.markdown("### 📺 Rastgele Dizi")
-            if len(shows_only) > 0:
-                rnd_show = shows_only.sample(1)["title"].iloc[0]
-                st.success(f"🎯 Başlayabilirsin: **{rnd_show}**")
-            else:
-                st.info("Dizi yok.")
+        if user_wl.empty:
+            st.info("📭 Bu kullanıcının watchlist’i boş.")
+        else:
+            st.dataframe(
+                user_wl[["type", "title", "created_at"]],
+                use_container_width=True,
+                hide_index=True
+            )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -661,64 +598,37 @@ with tab_recommend:
     watchlist_df = load_watchlist()
 
     if watchlist_df.empty:
-        st.info("📭 Watchlist boş. Önce içerik eklemelisin.")
+        st.info("📭 Watchlist boş.")
     else:
-        # Kullanıcı seçimi
         users = watchlist_df["user"].unique()
-        selected_user = st.selectbox("👤 Kullanıcı Seç", users)
+        selected_user = st.selectbox("👤 Kullanıcı", users)
 
         user_wl = watchlist_df[watchlist_df["user"] == selected_user]
 
-        # Watchlist'teki filmler ve diziler
-        movies_only = user_wl[user_wl["type"] == "Film"]["title"].tolist()
-        shows_only = user_wl[user_wl["type"] == "Dizi"]["title"].tolist()
-
-        colA, colB = st.columns(2)
-
-        # Filmler
-        with colA:
-            st.markdown("### 🎬 Filmler")
-            selected_movies = st.multiselect(
-                "Hangi filmler arasından seçim yapılsın?",
-                movies_only,
-                default=movies_only
-            )
-
-        # Diziler
-        with colB:
-            st.markdown("### 📺 Diziler")
-            selected_shows = st.multiselect(
-                "Hangi diziler arasından seçim yapılsın?",
-                shows_only,
-                default=shows_only
-            )
-
-        st.divider()
+        movies = user_wl[user_wl["type"] == "Film"]["title"].tolist()
+        shows  = user_wl[user_wl["type"] == "Dizi"]["title"].tolist()
 
         col1, col2 = st.columns(2)
 
-        # Rastgele film seç
         with col1:
-            st.markdown("## 🎯 Rastgele Film")
-            if st.button("🎬 Film Seç", use_container_width=True):
-                if len(selected_movies) == 0:
-                    st.warning("📭 Seçili film yok.")
+            st.write("🎬 Filmler")
+            chosen_movies = st.multiselect("Seçim yapılacak filmler", movies, default=movies)
+            if st.button("🎯 Rastgele Film"):
+                if chosen_movies:
+                    st.success(f"🎬 {pd.Series(chosen_movies).sample(1).iloc[0]}")
                 else:
-                    rnd_movie = pd.Series(selected_movies).sample(1).iloc[0]
-                    st.success(f"🎬 İzleyebilirsin: **{rnd_movie}**")
+                    st.warning("Film seçilmedi.")
 
-        # Rastgele dizi seç
         with col2:
-            st.markdown("## 🎯 Rastgele Dizi")
-            if st.button("📺 Dizi Seç", use_container_width=True):
-                if len(selected_shows) == 0:
-                    st.warning("📭 Seçili dizi yok.")
+            st.write("📺 Diziler")
+            chosen_shows = st.multiselect("Seçim yapılacak diziler", shows, default=shows)
+            if st.button("🎯 Rastgele Dizi"):
+                if chosen_shows:
+                    st.success(f"📺 {pd.Series(chosen_shows).sample(1).iloc[0]}")
                 else:
-                    rnd_show = pd.Series(selected_shows).sample(1).iloc[0]
-                    st.success(f"📺 Başlayabilirsin: **{rnd_show}**")
+                    st.warning("Dizi seçilmedi.")
 
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 
 # ==============================================================================
