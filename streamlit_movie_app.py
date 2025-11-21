@@ -318,6 +318,13 @@ def load_ratings():
         return pd.DataFrame(columns=["type", "title", "rating", "comment", "user", "created_at"])
     return df
 
+@st.cache_data(ttl=60)
+def load_watchlist():
+    df = load_sheet("watchlist")
+    if df.empty:
+        return pd.DataFrame(columns=["type", "title", "user", "created_at"])
+    return df
+
 def save_movie(entry):
     row_list = [entry["type"], entry["title"]]
     append_row("movies", row_list)
@@ -330,6 +337,25 @@ def save_rating(entry):
     ]
     append_row("ratings", row_list)
     load_ratings.clear()
+
+def save_watchlist(entry):
+    row = [entry["type"], entry["title"], entry["user"], entry["created_at"]]
+    append_row("watchlist", row)
+    load_watchlist.clear()
+
+def delete_from_watchlist(title, user):
+    sheet = connect_google_sheets()
+    ws = sheet.worksheet("watchlist")
+    data = ws.get_all_values()
+
+    # başlık hariç
+    for idx, row in enumerate(data[1:], start=2):
+        if row[1] == title and row[2] == user:
+            ws.delete_rows(idx)
+            break
+
+    load_watchlist.clear()
+
 
 # --- HEADER & METRİKLER ---
 st.title("🎬")
@@ -355,10 +381,11 @@ with col3:
 st.divider()
 
 # --- TAB YAPISI ---
-tab_vote, tab_top10, tab_profile, tab_data = st.tabs([
+tab_vote, tab_top10, tab_profile, tab_watchlist, tab_data = st.tabs([
     "✍️ Oy Ver & Ekle",
     "🏆 Top 10 Listesi",
     "👤 Kullanıcı Profili",
+    "📌 Watchlist",
     "📂 Tüm Veriler"
 ])
 
@@ -511,7 +538,90 @@ with tab_profile:
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-#   TAB 4: TÜM VERİLER (RAW DATA)
+#   TAB 4: WATCHLIST
+# ==============================================================================
+with tab_watchlist:
+    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+    st.subheader("📌 Watchlist")
+
+    watchlist_df = load_watchlist()
+
+    # Watchlist'e ekleme
+    with st.form("add_watchlist"):
+        colA, colB = st.columns(2)
+        with colA:
+            wl_user = st.text_input("👤 Kullanıcı Adı", placeholder="Örn: Burhan")
+        with colB:
+            wl_title = st.selectbox("🎬 İçerik Seç", movies_df["title"].unique())
+
+        submitted_wl = st.form_submit_button("📌 Watchliste Ekle")
+        if submitted_wl:
+            if not wl_user.strip():
+                st.error("⚠️ İsmini girmelisin!")
+            else:
+                m_type = movies_df[movies_df["title"] == wl_title]["type"].iloc[0]
+                save_watchlist({
+                    "type": m_type,
+                    "title": wl_title,
+                    "user": wl_user,
+                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+                })
+                st.success("✔ Watchliste eklendi!")
+                st.rerun()
+
+    st.divider()
+
+    # Kullanıcı bazlı gösterim
+    if watchlist_df.empty:
+        st.info("📭 Watchlist boş.")
+    else:
+        user_list = watchlist_df["user"].unique()
+        selected_wl_user = st.selectbox("👤 Kullanıcı seç", user_list)
+
+        user_wl = watchlist_df[watchlist_df["user"] == selected_wl_user]
+
+        st.subheader(f"🎬 {selected_wl_user} Watchlist")
+
+        st.dataframe(user_wl[["type", "title", "created_at"]], hide_index=True, use_container_width=True)
+
+        # Silme
+        remove_title = st.selectbox("❌ Silmek istediğin içerik", user_wl["title"].unique())
+        if st.button("❌ Watchlistten Sil"):
+            delete_from_watchlist(remove_title, selected_wl_user)
+            st.success("Silindi ✔")
+            st.rerun()
+
+        st.divider()
+
+        # 🎯 Rastgele Seçim
+        st.subheader("🎲 Rastgele İzleme Önerisi")
+
+        movies_only = user_wl[user_wl["type"] == "Film"]
+        shows_only = user_wl[user_wl["type"] == "Dizi"]
+
+        colX, colY = st.columns(2)
+
+        with colX:
+            st.markdown("### 🎬 Rastgele Film")
+            if len(movies_only) > 0:
+                rnd_movie = movies_only.sample(1)["title"].iloc[0]
+                st.success(f"🎯 İzleyebilirsin: **{rnd_movie}**")
+            else:
+                st.info("Film yok.")
+
+        with colY:
+            st.markdown("### 📺 Rastgele Dizi")
+            if len(shows_only) > 0:
+                rnd_show = shows_only.sample(1)["title"].iloc[0]
+                st.success(f"🎯 Başlayabilirsin: **{rnd_show}**")
+            else:
+                st.info("Dizi yok.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# ==============================================================================
+#   TAB 5: TÜM VERİLER (RAW DATA)
 # ==============================================================================
 with tab_data:
     st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
