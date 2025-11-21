@@ -321,15 +321,24 @@ def load_ratings():
 @st.cache_data(ttl=60)
 def load_watchlist():
     df = load_sheet("watchlist")
+    
+    # Beklenen sütunlar
+    expected_cols = ["type", "title", "user", "created_at"]
+    
+    # Eğer gelen veri boşsa, boş template döndür
     if df.empty:
-        return pd.DataFrame(columns=["type", "title", "user", "created_at"])
-    return df
-
-@st.cache_data(ttl=60)
-def load_watchlist():
-    df = load_sheet("watchlist")
-    if df.empty or "title" not in df.columns:
-        return pd.DataFrame(columns=["type", "title", "user", "created_at"])
+        return pd.DataFrame(columns=expected_cols)
+    
+    # Sütun isimlerini küçük harfe çevir ve boşlukları temizle (Hata önleyici)
+    df.columns = df.columns.str.lower().str.strip()
+    
+    # Eksik sütun kontrolü: Eğer 'title' yoksa veri bozuktur, boş döndür
+    if not set(expected_cols).issubset(df.columns):
+        # Sütunlar eksikse bile kodun patlamaması için boş sütunları ekleyelim
+        for col in expected_cols:
+            if col not in df.columns:
+                df[col] = ""
+                
     return df
 
 def save_movie(entry):
@@ -345,27 +354,27 @@ def save_rating(entry):
     append_row("ratings", row_list)
     load_ratings.clear()
 
-def save_watchlist(entry):
-    row = [entry["type"], entry["title"], entry["user"], entry["created_at"]]
-    append_row("watchlist", row)
-    load_watchlist.clear()
-
 def delete_from_watchlist(title, user):
     sheet = connect_google_sheets()
     ws = sheet.worksheet("watchlist")
     data = ws.get_all_values()
 
-    # başlık hariç
-    for idx, row in enumerate(data[1:], start=2):
-        if row[1] == title and row[2] == user:
-            ws.delete_rows(idx)
-            break
+    # Başlık hariç satırları kontrol et
+    # Google Sheets API'de satır numaraları 1'den başlar, başlık 1. satır ise veri 2'den başlar.
+    # enumerate içinde index 0'dan başlar, bu yüzden start=2 diyerek Sheet satırına denk getiriyoruz.
+    rows_to_delete = []
+    
+    for idx, row in enumerate(data):
+        if idx == 0: continue # Başlığı atla
+        # row listesi indexleri: 0=type, 1=title, 2=user
+        if len(row) > 2 and row[1] == title and row[2] == user:
+            # Silinecek satırın gerçek sheet numarası (idx + 1)
+            rows_to_delete.append(idx + 1)
+            
+    # Sondan başa doğru sil ki indexler kaymasın
+    for row_num in reversed(rows_to_delete):
+        ws.delete_rows(row_num)
 
-    load_watchlist.clear()
-
-def save_watchlist(entry):
-    row = [entry["type"], entry["title"], entry["user"], entry["created_at"]]
-    append_row("watchlist", row)
     load_watchlist.clear()
 
 def save_watchlist(entry):
@@ -569,22 +578,36 @@ with tab_watchlist:
 
     watchlist_df = load_watchlist()
 
+    # Veri kontrolü: Boş mu veya gerekli sütunlar eksik mi?
     if watchlist_df.empty:
-        st.info("📭 Watchlist boş.")
+        st.info("📭 Watchlist şu an boş.")
+    elif "user" not in watchlist_df.columns:
+        st.error("⚠️ Watchlist verisi okunurken bir hata oluştu (Sütun başlıkları eksik). Lütfen Google Sheet'i kontrol edin.")
     else:
         users = watchlist_df["user"].unique()
-        selected_user = st.selectbox("👤 Kullanıcı", users)
+        selected_user = st.selectbox("👤 Kullanıcı", users, key="wl_user_select")
 
         user_wl = watchlist_df[watchlist_df["user"] == selected_user]
 
         if user_wl.empty:
             st.info("📭 Bu kullanıcının watchlist’i boş.")
         else:
+            # Güvenli sütun seçimi
+            cols_to_show = [col for col in ["type", "title", "created_at"] if col in user_wl.columns]
+            
             st.dataframe(
-                user_wl[["type", "title", "created_at"]],
+                user_wl[cols_to_show],
                 use_container_width=True,
                 hide_index=True
             )
+            
+            # Silme opsiyonu ekleyelim (Opsiyonel Geliştirme)
+            to_delete = st.selectbox("Listeden silmek istediğin var mı?", ["Seçiniz..."] + user_wl["title"].tolist())
+            if to_delete != "Seçiniz...":
+                if st.button(f"🗑️ {to_delete} sil"):
+                    delete_from_watchlist(to_delete, selected_user)
+                    st.success("Silindi!")
+                    st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
