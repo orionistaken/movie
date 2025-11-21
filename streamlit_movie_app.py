@@ -553,7 +553,7 @@ with tab_watchlist:
     watchlist_df = load_watchlist()
 
     # Watchlist'e ekleme
- with st.form("add_watchlist"):
+with st.form("add_watchlist"):
     colA, colB = st.columns(2)
 
     with colA:
